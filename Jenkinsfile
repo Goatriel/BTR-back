@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo 'Lancement des tests unitaires...'
                 // Si vous aviez des tests, cette commande les exécuterait
-                // sh 'mvn test' 
+                sh 'mvn test' 
                 // Pour l'instant, on se contente d'un message pour valider l'étape.
             }
         }
@@ -38,6 +38,21 @@ pipeline {
                 echo 'L\'artefact est prêt : budget-tracker-backend.jar'
                 // Optionnel : Archivage du JAR généré
                 // archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Démarrage de l\'analyse SonarQube...'
+                // Exécute l'analyse Maven en utilisant les propriétés Sonar
+                // L'identifiant (ID) du jeton Jenkins et l'URL du serveur sont passés via les variables d'environnement Jenkins.
+                withCredentials([string(credentialsId: 'SONARQUBE_TOKEN_BACKEND', variable: 'SONAR_TOKEN')]) {
+                    sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
+                        -Dsonar.host.url=http://localhost:9000 \
+                        -Dsonar.token=${SONAR_TOKEN} \
+                        -Dsonar.projectKey=budget-tracker-backend \
+                        -Dsonar.projectName='Budget Tracker Backend'"
+                }
             }
         }
     }
